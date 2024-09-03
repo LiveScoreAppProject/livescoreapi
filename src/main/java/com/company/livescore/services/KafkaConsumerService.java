@@ -18,4 +18,5 @@ public class KafkaConsumerService {
         System.out.println(message);
         webSocketHandler.broadcastMessage(message);
     }
+
 }
