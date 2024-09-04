@@ -13,7 +13,7 @@ public class KafkaConsumerService {
         this.webSocketHandler = webSocketHandler;
     }
 
-    @KafkaListener(topics = "live-events", groupId = "event-consumer-group")
+    @KafkaListener(topics = "live_events", groupId = "event-consumer-group")
     public void listen(String message) {
         System.out.println(message);
         webSocketHandler.broadcastMessage(message);
