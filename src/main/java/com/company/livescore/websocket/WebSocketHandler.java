@@ -6,29 +6,47 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private final CopyOnWriteArraySet<WebSocketSession> sessions = new CopyOnWriteArraySet<>();
+    // Store WebSocket sessions with their associated integer keys
+    private final ConcurrentHashMap<WebSocketSession, Integer> sessionKeys = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        sessions.add(session);
+        // Keep the session open without sending a message yet
+    }
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        // Parse the integer from the message
+        try {
+            int key = Integer.parseInt(message.getPayload());
+            // Store the session with the associated key
+            sessionKeys.put(session, key);
+            // Optionally, you can send an acknowledgment back to the client
+            session.sendMessage(new TextMessage("Key received: " + key));
+        } catch (NumberFormatException e) {
+            // Handle invalid integer input
+            session.sendMessage(new TextMessage("Invalid key. Please send an integer."));
+        }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        sessions.remove(session);
+        sessionKeys.remove(session);
     }
 
-    public void broadcastMessage(String message) {
-        for (WebSocketSession session : sessions) {
-            try {
-                session.sendMessage(new TextMessage(message));
-            } catch (Exception e) {
-                sessions.remove(session);
+    public void broadcastMessage(int key, String message) {
+        for (WebSocketSession session : sessionKeys.keySet()) {
+            if (sessionKeys.get(session) == key) {
+                try {
+                    session.sendMessage(new TextMessage(message));
+                } catch (Exception e) {
+                    sessionKeys.remove(session);
+                }
             }
         }
     }
