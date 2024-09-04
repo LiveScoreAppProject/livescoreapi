@@ -15,8 +15,8 @@ public class KafkaConsumerService {
     }
 
     @KafkaListener(topics = "live_events", groupId = "event-consumer-group")
-    public void listen(ConsumerRecord<Integer, String> record) {
-        Integer key = record.key();
+    public void listen(ConsumerRecord<String, String> record) {
+        String key = record.key();
         String value = record.value();
 
         if (key != null && value != null) {

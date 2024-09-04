@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketHandler extends TextWebSocketHandler {
 
     // Store WebSocket sessions with their associated integer keys
-    private final ConcurrentHashMap<WebSocketSession, Integer> sessionKeys = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<WebSocketSession, String> sessionKeys = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -23,7 +23,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         // Parse the integer from the message
         try {
-            int key = Integer.parseInt(message.getPayload());
+            String key = message.getPayload();
             // Store the session with the associated key
             sessionKeys.put(session, key);
             // Optionally, you can send an acknowledgment back to the client
@@ -39,9 +39,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
         sessionKeys.remove(session);
     }
 
-    public void broadcastMessage(int key, String message) {
+    public void broadcastMessage(String key, String message) {
         for (WebSocketSession session : sessionKeys.keySet()) {
-            if (sessionKeys.get(session) == key) {
+            if (sessionKeys.get(session).equals(key)) {
                 try {
                     session.sendMessage(new TextMessage(message));
                 } catch (Exception e) {
